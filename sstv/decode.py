@@ -6,7 +6,7 @@ from PIL import Image
 from scipy.signal.windows import hann
 
 from . import spec
-from .common import log_message, progress_bar
+from .common import log, progress_bar
 
 
 def calc_lum(freq):
@@ -129,7 +129,7 @@ class SSTVDecoder(object):
             if current_sample % (jump_size * 256) == 0:
                 search_msg = "Searching for calibration header... {:.1f}s"
                 progress = current_sample / self._sample_rate
-                log_message(search_msg.format(progress), recur=True)
+                log.info(search_msg.format(progress))
 
             search_end = current_sample + header_size
             search_area = self._samples[current_sample:search_end]
@@ -146,12 +146,10 @@ class SSTVDecoder(object):
                and abs(self._peak_fft_freq(vis_start_area) - 1200) < 50):
 
                 stop_msg = "Searching for calibration header... Found!{:>4}"
-                log_message(stop_msg.format(' '))
+                log.info(stop_msg.format(' '))
                 return current_sample + header_size
 
-        log_message()
-        log_message("Couldn't find SSTV header in the given audio file",
-                    err=True)
+        log.error("Couldn't find SSTV header in the given audio file")
         return None
 
     def _decode_vis(self, vis_start):
@@ -182,7 +180,7 @@ class SSTVDecoder(object):
             raise ValueError(error.format(vis_value))
 
         mode = spec.VIS_MAP[vis_value]
-        log_message("Detected SSTV mode {}".format(mode.NAME))
+        log.info("Detected SSTV mode {}".format(mode.NAME))
 
         return mode
 
@@ -251,8 +249,7 @@ class SSTVDecoder(object):
                     # Align to start of sync pulse
                     seq_start = self._align_sync(seq_start)
                     if seq_start is None:
-                        log_message()
-                        log_message("Reached end of audio whilst decoding.")
+                        log.info("Reached end of audio whilst decoding.")
                         return image_data
 
                 pixel_time = self.mode.PIXEL_TIME
@@ -276,8 +273,7 @@ class SSTVDecoder(object):
 
                     # If we are performing fft past audio length, stop early
                     if px_end >= len(self._samples):
-                        log_message()
-                        log_message("Reached end of audio whilst decoding.")
+                        log.info("Reached end of audio whilst decoding.")
                         return image_data
 
                     pixel_area = self._samples[px_pos:px_end]
@@ -285,7 +281,7 @@ class SSTVDecoder(object):
 
                     image_data[line][chan][px] = calc_lum(freq)
 
-            progress_bar(line, height - 1, "Decoding image...")
+            # progress_bar(line, height - 1, "Decoding image...")
 
         return image_data
 
@@ -305,7 +301,7 @@ class SSTVDecoder(object):
         image = Image.new(col_mode, (width, height))
         pixel_data = image.load()
 
-        log_message("Drawing image data...")
+        log.info("Drawing image data...")
 
         for y in range(height):
 
@@ -343,5 +339,5 @@ class SSTVDecoder(object):
         if image.mode != "RGB":
             image = image.convert("RGB")
 
-        log_message("...Done!")
+        log.info("...Done!")
         return image

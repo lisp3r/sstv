@@ -2,28 +2,11 @@
 
 from os import get_terminal_size
 from sys import stderr, stdout, platform
+import logging
 
 
-def log_message(message="", show=True, err=False, recur=False, prefix=True):
-    """Simple print wrapper"""
-
-    if not show:
-        return
-    out = stdout
-    if err:
-        out = stderr
-    end = '\n'
-    if recur:
-        end = '\r'
-        if platform == "win32":
-            message = ''.join(['\r', message])
-        cols = get_terminal_size().columns
-        if cols < len(message):
-            message = message[:cols]
-    if prefix:
-        message = ' '.join(["[sstv]", message])
-
-    print(message, file=out, end=end)
+logging.basicConfig(format='[%(name)s]    %(message)s', level=logging.INFO)
+log = logging.getLogger('sstv')
 
 
 def progress_bar(progress, complete, message="", show=True):
@@ -33,7 +16,7 @@ def progress_bar(progress, complete, message="", show=True):
         return
 
     message_size = len(message) + 7  # prefix size
-    cols = get_terminal_size().columns
+    cols = 100
     percent_on = True
     level = progress / complete
     bar_size = min(cols - message_size - 10, 100)
@@ -51,6 +34,4 @@ def progress_bar(progress, complete, message="", show=True):
         percent = "{:4d}%".format(int(level * 100))
 
     align = cols - message_size - len(percent)
-    not_end = not progress == complete
-    log_message("{}{:>{width}}{}".format(message, bar, percent, width=align),
-                recur=not_end)
+    log.info("{}{:>{width}}{}".format(message, bar, percent, width=align))

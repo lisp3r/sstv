@@ -13,6 +13,20 @@ class COL_FMT(Enum):
 class M1(object):
     NAME = "Martin 1"
 
+    """
+    TIMING SEQUENCE
+
+    (1) Sync pulse          4.862ms 1200hz
+    (2) Sync porch          0.572ms 1500hz
+    (3) Green scan
+    (4) Separator pulse     0.572ms 1500hz
+    (5) Blue scan
+    (6) Separator pulse
+    0.572ms1500hz
+    (7) Red scan
+    (8) Separator pulse     0.572ms 1500hz
+    """
+
     COLOR = COL_FMT.GBR
     LINE_WIDTH = 320
     LINE_COUNT = 256
@@ -132,9 +146,9 @@ class R36(object):
     COLOR = COL_FMT.YUV
     LINE_WIDTH = 320
     LINE_COUNT = 240
-    SCAN_TIME = 0.088000
+    SCAN_TIME = 0.088000        # Scan line, (sec)
     HALF_SCAN_TIME = 0.044000
-    SYNC_PULSE = 0.009000
+    SYNC_PULSE = 0.009000       # Scan line, Y
     SYNC_PORCH = 0.003000
     SEP_PULSE = 0.004500
     SEP_PORCH = 0.001500
@@ -183,13 +197,46 @@ class R72(R36):
     HAS_ALT_SCAN = False
 
 
+class PD120(object):
+    NAME = "PD 120"
+
+    COLOR = COL_FMT.YUV
+    LINE_WIDTH = 640
+    LINE_COUNT = 496
+    SCAN_TIME = 0.121600    # sec
+    SYNC_PULSE = 0.002000
+    SYNC_PORCH = 0.00208
+
+    PIXEL_TIME = SCAN_TIME / LINE_WIDTH  # color scan time
+    WINDOW_FACTOR = 0.5  # ?
+
+
+
+
+    """
+    TIMING SEQUENCE
+    
+    Note: two complete lines are shown.
+    (1) Sync pulse          20.000ms    1200hz
+    (2) Porch               2.080ms     1500hz
+
+    (3) Y scan (from odd line)
+    (4) R-Y scan averaged for two lines
+    (5) B-Y averaged for two lines
+    (6) Y scan (from even line)
+    
+    Repeat until correct number of lines are transmitted for sub-mode
+    """
+
+
 VIS_MAP = {8: R36,
            12: R72,
            40: M2,
            44: M1,
            56: S2,
            60: S1,
-           76: SDX}
+           76: SDX,
+           95: PD120}
 
 BREAK_OFFSET = 0.300
 LEADER_OFFSET = 0.010 + BREAK_OFFSET
